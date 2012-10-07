@@ -32,7 +32,8 @@ module.exports = function(grunt) {
 
     // Reference to the dest dir
     var dest = path.normalize(this.file.dest + '/')
-      , files = grunt.file.expandFiles(this.file.src);
+      , files = grunt.file.expandFiles(this.file.src)
+      , basePath = options.basePath;
 
     // Make the dest dir if it doesn't exist
     grunt.file.mkdir(dest);
@@ -40,8 +41,9 @@ module.exports = function(grunt) {
     // Loop through all files and write them to files
     files.forEach(function(filepath) {
       var fileExtname = path.extname(filepath)
+        , outputDir = basePath ? path.dirname(path.relative(basePath, filepath )) + "/" : ""
         , src = grunt.file.read(filepath)
-        , outputFilename = path.basename(filepath, fileExtname)
+        , outputFilename = outputDir + path.basename(filepath, fileExtname)
         , outputExtension = options.client ? '.js' : '.html'
         , outputFilepath = dest + outputFilename + outputExtension
         , compiled = grunt.helper('compile', src, options, wrapper, outputFilename, filepath);
@@ -87,11 +89,7 @@ module.exports = function(grunt) {
 
   grunt.registerHelper('wrap', function(compiled, wrapper, filename){
     // Generate path for wrapper template
-    var templateFilename =
-        wrapper.amd ? 'amd'
-      : wrapper.node ? 'node'
-      : 'jade-global';
-    var templatePath = __dirname + '/../support/' + templateFilename + '.template';
+    var templatePath = __dirname + '/../support/' + (wrapper.amd ? 'amd' : 'no-amd') + '.template';
     // Read in the correct wrapper template
     var template = grunt.file.read(templatePath);
     grunt.verbose.write('Wrapping ' + filename + ' template...');
@@ -107,11 +105,7 @@ module.exports = function(grunt) {
 
   grunt.registerHelper('runtime', function(dest, wrapper){
     // Generate path for wrapper template
-    var templateFilename =
-        wrapper.amd ? 'amd'
-      : wrapper.node ? 'node'
-      : 'jade-global';
-    var templatePath = __dirname + '/../support/' + templateFilename + '-runtime.template';
+    var templatePath = __dirname + '/../support/' + (wrapper.amd ? 'amd' : 'no-amd') + '-runtime.template';
     // Read in the correct wrapper template
     var template = grunt.file.read(templatePath);
     var runtime = grunt.file.read(jadeRuntimePath);
